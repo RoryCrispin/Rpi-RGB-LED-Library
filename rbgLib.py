@@ -1,9 +1,15 @@
 from __future__ import division
-import time
-import RPi.GPIO as GPIO
+import time, sys
 
+import RPi.GPIO as GPIO
+import pigpio
+
+pi = None
 
 # noinspection PyPep8Naming
+from led_modes import find_delta
+
+
 class rgbColour(object):
     red = 0
     green = 0
@@ -27,6 +33,7 @@ class rgbColour(object):
                 return minimum
             else:
                 return val
+
         self.red = set_min(red, safe_b)
         self.blue = set_min(blue, safe_b)
         self.green = set_min(green, safe_b)
@@ -35,6 +42,10 @@ class rgbColour(object):
 def hexToColour(r, g, b):
     hex_constant = 0.3921568627
     return rgbColour(hex_constant * r, hex_constant * g, hex_constant * b)
+
+
+def percentageToHex(percentage):
+    return 2.55 * percentage
 
 
 red = rgbColour(100, 0, 0)
@@ -54,7 +65,7 @@ class rbgLed(object):
         self.R_led = RED
         self.G_led = GREEN
         self.B_led = BLUE
-
+        self.mode = None
     def set_colour(self, colour):
         self.R_led.set_ds(colour.red)
         self.G_led.set_ds(colour.green)
@@ -80,101 +91,60 @@ class rbgLed(object):
         self.B_led.turn_off()
 
     def fade_to(self, destColour, length):
+        steps = 100
         startColour = self.get_colour()
-        redDelta = find_delta(startColour.red, destColour.red, length)
-        greenDelta = find_delta(startColour.green, destColour.green, length)
-        blueDelta = find_delta(startColour.blue, destColour.blue, length)
-        for i in range(0, length + 1, 1):
-            time.sleep(0.004)
+        redDelta = find_delta(startColour.red, destColour.red, steps)
+        greenDelta = find_delta(startColour.green, destColour.green, steps)
+        blueDelta = find_delta(startColour.blue, destColour.blue, steps)
+        for i in range(0, steps + 1, 1):
+            time.sleep(length)
             to = rgbColour(startColour.red + (i * redDelta),
                            startColour.green + (i * greenDelta),
                            startColour.blue + (i * blueDelta))
             self.set_colour(to)
 
-
-class RGBFunctionParent(object):
-    interrupt = False
-    func_name = None
-    run_time = 0
-    run_infinite = False
-    rgbled = None
-
-    def __init__(self, func_name, run_time, rgbled):
-        self.func_name = func_name
-        self.rgbled = rgbled
-        # Set run_time to False to run indefinitely
-        if not run_time:
-            self.run_infinite = True
+    def bind_mode(self, mode):
+        if not self.mode:
+            self.mode = mode
+            mode.bind_led(self)
         else:
-            self.run_time = run_time
+            self.mode.unbind_led()
+            self.mode = mode
+            mode.bind_led(self)
 
-    def start(self):
-        self.main_func()
-
-    def main_func(self):
-        pass
-
-    def pause(self):
-        pass
-
-    def main_func(self):
-        pass
-
-    def interrupt_func(self):
-        self.interrupt = True
-        self.pause()
-
-
-class mode_breathe(RGBFunctionParent):
-    colour = None
-    pulse_time = 0
-
-    def __init__(self, run_time, rgbLed, colour, pulse_time):
-        super(mode_breathe, self).__init__("breathe", run_time, rgbLed)
-        self.colour = colour
-        self.pulse_time = pulse_time
-
-    def main_func(self):
-        while 1:
-            if self.interrupt:
-                break
-            self.rgbled.fade_to(self.colour, int(self.pulse_time / 2))
-            self.rgbled.fade_to(yellow.with_brightness(0.2), int(self.pulse_time / 2))
+    def interruptMode(self, pause=False):
+        self.mode.interrupt_func()
 
 
 class LED(object):
     def __init__(self, pin, bool_pwm, freq):
         self.pin = pin
-        GPIO.setup(self.pin, GPIO.OUT)
+        # GPIO.setup(self.pin, GPIO.OUT)
         self.duty_cycle = 0
         if bool_pwm:
-            self.pwm = GPIO.PWM(pin, freq)
-            self.pwm.start(self.duty_cycle)
+            pass
+            # self.pwm = GPIO.PWM(pin, freq)
+            # self.pwm.start(self.duty_cycle)
 
-    def set_ds(self, duty_cycle):
-        self.duty_cycle = duty_cycle
-        self.pwm.ChangeDutyCycle(duty_cycle)
+    def set_ds(self, percentage):
+        hex = int(percentageToHex(percentage))
+        self.duty_cycle = percentage
+        # print "Change LED: " + str(self.pin) + " to ds: " + str(hex) + " For %: " + str(percentage)
+        pi.set_PWM_dutycycle(self.pin, hex)
 
     def turn_off(self):
         self.set_ds(0)
 
 
-def find_delta(start_val, finish_val, steps):
-    return (finish_val - start_val) / steps
-
-
-def ledAlert(destColour, rgbLEDy, length):
-    startColour = rgbLEDy.get_colour()
-    rgbLEDy.fade_to(destColour, length)
-    time.sleep(0.5)
-    rgbLEDy.fade_to(startColour, length)
-
-
 def init():
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setwarnings(False)
+    global pi
+    pi = pigpio.pi()
+    pass
+    # GPIO.setmode(GPIO.BCM)
+    # GPIO.setwarnings(False)
 
 
 def exit(LED):
     LED.turn_off()
-    GPIO.cleanup()
+    pi.stop()
+    # GPIO.cleanup()
