@@ -17,6 +17,7 @@ class rgbColour(object):
 
     def __init__(self, red, green, blue, safe_brightness=False):
         # By default safe_brightness will block low duty cycles to keep fade motions smooth
+
         if not safe_brightness:
             self.red = red
             self.green = green
@@ -39,9 +40,17 @@ class rgbColour(object):
         self.green = set_min(green, safe_b)
 
 
-def hexToColour(r, g, b):
+def hex_rgb_to_colour(r, g, b):
     hex_constant = 0.3921568627
-    return rgbColour(hex_constant * r, hex_constant * g, hex_constant * b)
+    return rgbColour(int(hex_constant * r), int(hex_constant * g), int(hex_constant * b))
+
+
+def hex_to_colour(v):
+    if v[0] == '#':
+        v = v[1:]
+    assert (len(v) == 6)
+    # return int(v[:2], 16), int(v[2:4], 16), int(v[4:6], 16)
+    return hex_rgb_to_colour(int(v[:2], 16), int(v[2:4], 16), int(v[4:6], 16))
 
 
 def percentageToHex(percentage):
@@ -51,9 +60,9 @@ def percentageToHex(percentage):
 red = rgbColour(100, 0, 0)
 green = rgbColour(0, 100, 0)
 blue = rgbColour(0, 0, 100)
-orange = hexToColour(255, 127, 0)
-yellow = hexToColour(255, 255, 0)
-indigo = hexToColour(75, 0, 130)
+orange = hex_rgb_to_colour(255, 127, 0)
+yellow = hex_rgb_to_colour(255, 255, 0)
+indigo = hex_rgb_to_colour(75, 0, 130)
 purple = rgbColour(100, 0, 100)
 aqua = rgbColour(0, 100, 100)
 turquoise = rgbColour(0, 100, 30)
@@ -103,17 +112,32 @@ class rbgLed(object):
                            startColour.blue + (i * blueDelta))
             self.set_colour(to)
 
-    def bind_mode(self, mode):
-        if not self.mode:
+    def bind_mode(self, mode, unbind=True):
+        if not self.mode or not unbind:
             self.mode = mode
             mode.bind_led(self)
         else:
+            print("Rebind")
+            prev_mode = self.mode
             self.mode.unbind_led()
+            self.mode.join()  # Wait for the thread to exit before starting a new one.
             self.mode = mode
             mode.bind_led(self)
+        print("tasked")
 
-    def interruptMode(self, pause=False):
-        self.mode.interrupt_func()
+    def interruptMode(self, mode, pause=False, resume=False):
+        # self.mode.interrupt_func()
+        previousMode = self.mode
+        if pause:
+            self.mode.pause(wait_until_paused=True)
+        self.bind_mode(mode, unbind=False)
+        if pause:
+            self.mode.join()
+
+        if resume:
+            self.mode.join()
+            print("Joined #01")
+            self.bind_mode(previousMode)
 
 
 class LED(object):
