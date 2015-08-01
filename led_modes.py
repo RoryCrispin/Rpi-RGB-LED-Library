@@ -3,7 +3,7 @@ from __future__ import division
 __author__ = 'Rory'
 import time
 from threading import Thread
-
+import rbgLib
 
 class RGBFunctionParent(Thread):
     interrupt = False
@@ -46,7 +46,7 @@ class RGBFunctionParent(Thread):
     def unpause(self):
         self.pause = False
 
-    def pause(self, wait_until_paused=False):
+    def request_pause(self, wait_until_paused=False):
         self.pause = True
         if wait_until_paused:
             while not self.pause_ready:
@@ -58,10 +58,17 @@ class RGBFunctionParent(Thread):
 
     def interrupt_func(self):
         self.interrupt = True
-        self.pause()
+        # self.request_pause()
 
     def mode_finished(self, resumePrev):
         pass
+
+    def check_loop(self):
+        if self.pause:
+            self.pause_ready = True
+            while self.pause:
+                pass
+            self.pause_ready = False
 
 
 
@@ -75,14 +82,11 @@ class mode_breathe(RGBFunctionParent):
         self.pulse_time = pulse_time
 
     def main_func(self):
+        self.pause = False
         while 1:
+            self.check_loop()
             if self.interrupt:
                 break
-            if self.pause:
-                self.pause_ready = True
-                while self.pause:
-                    pass
-                self.pause_ready = False
             # self.rgbled.fade_to(self.colour, int(self.pulse_time / 2))
             # self.rgbled.fade_to(self.colour.with_brightness(0.2), int(self.pulse_time / 2))
             self.rgbled.fade_to(self.colour, self.pulse_time)
@@ -114,6 +118,32 @@ class mode_alert(RGBFunctionParent):
         # self.mode_finished(True)
 
 
+class mode_strobe(RGBFunctionParent):
+    colour = None
+    period = None
+
+    def __init__(self, colour, period):
+        super(mode_strobe, self).__init__("strobe")
+        self.colour = colour
+        self.period = period
+
+    def main_func(self):
+
+        self.pause = False
+        # off = rbgLib.rgbColour(0,0,0)
+        while 1:
+            if self.interrupt:
+                break
+            self.check_loop()
+            self.rgbled.set_colour(self.colour)
+            time.sleep(self.period)
+            self.rgbled.turn_off()
+            time.sleep(self.period)
+
+
+
+
+
 def find_delta(start_val, finish_val, steps):
     return (finish_val - start_val) / steps
 
@@ -126,4 +156,4 @@ def ledAlert(destColour, rgbLEDy, length):
 
 
 # All modes must be listed here
-modes = {"breathe": mode_breathe, "static": mode_static, "alert": mode_alert}
+modes = {"breathe": mode_breathe, "static": mode_static, "alert": mode_alert, "strobe": mode_strobe}

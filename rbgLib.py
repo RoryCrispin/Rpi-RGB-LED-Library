@@ -112,7 +112,7 @@ class rbgLed(object):
                            startColour.blue + (i * blueDelta))
             self.set_colour(to)
 
-    def bind_mode(self, mode, unbind=True):
+    def bind_mode(self, mode, unbind=True, resume_thread=False):
         if not self.mode or not unbind:
             self.mode = mode
             mode.bind_led(self)
@@ -122,22 +122,26 @@ class rbgLed(object):
             self.mode.unbind_led()
             self.mode.join()  # Wait for the thread to exit before starting a new one.
             self.mode = mode
-            mode.bind_led(self)
+            if not resume_thread:
+                self.mode.bind_led(self)
+            else:
+                self.mode.bind_led(self, start=False)
         print("tasked")
 
-    def interruptMode(self, mode, pause=False, resume=False):
+    def interruptMode(self, mode, pause=False, resume_thread=False):
         # self.mode.interrupt_func()
         previousMode = self.mode
         if pause:
-            self.mode.pause(wait_until_paused=True)
+            self.mode.request_pause(wait_until_paused=True)
         self.bind_mode(mode, unbind=False)
         if pause:
             self.mode.join()
 
-        if resume:
+        if resume_thread:
             self.mode.join()
             print("Joined #01")
-            self.bind_mode(previousMode)
+            self.bind_mode(previousMode, resume_thread=True)
+            previousMode.unpause()
 
 
 class LED(object):
