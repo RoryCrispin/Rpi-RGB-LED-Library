@@ -57,6 +57,7 @@ def percentageToHex(percentage):
     return 2.55 * percentage
 
 
+# Preset Colours
 red = rgbColour(100, 0, 0)
 green = rgbColour(0, 100, 0)
 blue = rgbColour(0, 0, 100)
@@ -75,6 +76,7 @@ class rbgLed(object):
         self.G_led = GREEN
         self.B_led = BLUE
         self.mode = None
+
     def set_colour(self, colour):
         self.R_led.set_ds(colour.red)
         self.G_led.set_ds(colour.green)
