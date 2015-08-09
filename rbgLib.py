@@ -1,5 +1,6 @@
 from __future__ import division
-import time, sys
+import time
+import sys
 
 import RPi.GPIO as GPIO
 import pigpio
@@ -16,7 +17,8 @@ class rgbColour(object):
     blue = 0
 
     def __init__(self, red, green, blue, safe_brightness=False):
-        # By default safe_brightness will block low duty cycles to keep fade motions smooth
+        # By default safe_brightness will block low duty cycles to keep fade
+        # motions smooth
 
         if not safe_brightness:
             self.red = red
@@ -26,7 +28,13 @@ class rgbColour(object):
             self.safe_brightnessF(red, green, blue, safe_brightness)
 
     def with_brightness(self, multiplier):
-        return rgbColour(self.red * multiplier, self.green * multiplier, self.blue * multiplier)
+        return rgbColour(
+            self.red *
+            multiplier,
+            self.green *
+            multiplier,
+            self.blue *
+            multiplier)
 
     def safe_brightnessF(self, red, green, blue, safe_b):
         def set_min(val, minimum):
@@ -42,7 +50,9 @@ class rgbColour(object):
 
 def hex_rgb_to_colour(r, g, b):
     hex_constant = 0.3921568627
-    return rgbColour(int(hex_constant * r), int(hex_constant * g), int(hex_constant * b))
+    return rgbColour(int(hex_constant * r),
+                     int(hex_constant * g),
+                     int(hex_constant * b))
 
 
 def hex_to_colour(v):
@@ -71,6 +81,7 @@ turquoise = rgbColour(0, 100, 30)
 
 # noinspection PyPep8Naming
 class rbgLed(object):
+
     def __init__(self, RED, GREEN, BLUE):
         self.R_led = RED
         self.G_led = GREEN
@@ -83,10 +94,16 @@ class rbgLed(object):
         self.B_led.set_ds(colour.blue)
 
     def verbose_get_colour(self):
-        print (
-            "COLOUR : " + str(self.R_led.duty_cycle) + " " + str(self.G_led.duty_cycle) + " " + str(
-                self.B_led.duty_cycle))
-        return rgbColour(self.R_led.duty_cycle, self.G_led.duty_cycle, self.B_led.duty_cycle)
+        print ("COLOUR : " +
+               str(self.R_led.duty_cycle) +
+               " " +
+               str(self.G_led.duty_cycle) +
+               " " +
+               str(self.B_led.duty_cycle))
+        return rgbColour(
+            self.R_led.duty_cycle,
+            self.G_led.duty_cycle,
+            self.B_led.duty_cycle)
 
     def blink(self, colour, hold_time):
         self.set_colour(colour)
@@ -94,7 +111,10 @@ class rbgLed(object):
         self.turn_off()
 
     def get_colour(self):
-        return rgbColour(self.R_led.duty_cycle, self.G_led.duty_cycle, self.B_led.duty_cycle)
+        return rgbColour(
+            self.R_led.duty_cycle,
+            self.G_led.duty_cycle,
+            self.B_led.duty_cycle)
 
     def turn_off(self):
         self.R_led.turn_off()
@@ -122,7 +142,8 @@ class rbgLed(object):
             print("Rebind")
             prev_mode = self.mode
             self.mode.unbind_led()
-            self.mode.join()  # Wait for the thread to exit before starting a new one.
+            # Wait for the thread to exit before starting a new one.
+            self.mode.join()
             self.mode = mode
             if not resume_thread:
                 self.mode.bind_led(self)
@@ -147,6 +168,7 @@ class rbgLed(object):
 
 
 class LED(object):
+
     def __init__(self, pin, bool_pwm, freq):
         self.pin = pin
         # GPIO.setup(self.pin, GPIO.OUT)
@@ -159,7 +181,8 @@ class LED(object):
     def set_ds(self, percentage):
         hex = int(percentageToHex(percentage))
         self.duty_cycle = percentage
-        # print "Change LED: " + str(self.pin) + " to ds: " + str(hex) + " For %: " + str(percentage)
+        # print "Change LED: " + str(self.pin) + " to ds: " + str(hex) + " For
+        # %: " + str(percentage)
         pi.set_PWM_dutycycle(self.pin, hex)
 
     def turn_off(self):

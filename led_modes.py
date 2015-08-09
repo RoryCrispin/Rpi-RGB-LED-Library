@@ -5,6 +5,7 @@ import time
 from threading import Thread
 import rbgLib
 
+
 class RGBFunctionParent(Thread):
     interrupt = False
     func_name = None
@@ -71,7 +72,6 @@ class RGBFunctionParent(Thread):
             self.pause_ready = False
 
 
-
 class mode_breathe(RGBFunctionParent):
     colour = None
     pulse_time = 0
@@ -79,11 +79,11 @@ class mode_breathe(RGBFunctionParent):
     def __init__(self, colour, pulse_time, run_time=False):
         super(mode_breathe, self).__init__("breathe", run_time)
         self.colour = colour
-        self.pulse_time = pulse_time
+        self.pulse_time = float(pulse_time)
 
     def main_func(self):
         self.pause = False
-        while 1:
+        while True:
             self.check_loop()
             if self.interrupt:
                 break
@@ -91,7 +91,9 @@ class mode_breathe(RGBFunctionParent):
             # self.rgbled.fade_to(self.colour.with_brightness(0.2), int(self.pulse_time / 2))
             self.rgbled.fade_to(self.colour, self.pulse_time)
             time.sleep(self.pulse_time)
-            self.rgbled.fade_to(self.colour.with_brightness(0.05), self.pulse_time)
+            self.rgbled.fade_to(
+                self.colour.with_brightness(0.05),
+                self.pulse_time)
             time.sleep(self.pulse_time)
 
 
@@ -125,20 +127,48 @@ class mode_strobe(RGBFunctionParent):
     def __init__(self, colour, period):
         super(mode_strobe, self).__init__("strobe")
         self.colour = colour
-        self.period = period
+        self.period = float(period)
 
     def main_func(self):
 
         self.pause = False
         # off = rbgLib.rgbColour(0,0,0)
-        while 1:
+        pOn = self.period
+        pOff= self.period*10
+        cColour = self.colour
+        while True:
+            self.check_loop()
             if self.interrupt:
                 break
             self.check_loop()
-            self.rgbled.set_colour(self.colour)
-            time.sleep(self.period)
+            self.rgbled.set_colour(cColour)
+            time.sleep(pOn)
             self.rgbled.turn_off()
-            time.sleep(self.period)
+            time.sleep(pOff)
+
+class mode_rainbow(RGBFunctionParent):
+    period = None
+
+    def __init__(self, period, brightness=1):
+        super(mode_rainbow, self).__init__("rainbow")
+        self.period = float(period)
+
+    def main_func(self):
+        self.pause = False
+        rainbowColours = [rbgLib.red, rbgLib.orange, rbgLib.yellow, rbgLib.green, rbgLib.blue, rbgLib.indigo, rbgLib.purple ]
+
+        while True:
+            self.check_loop()
+            if self.interrupt:
+                break
+            # self.rgbled.fade_to(self.colour, int(self.pulse_time / 2))
+            # self.rgbled.fade_to(self.colour.with_brightness(0.2), int(self.pulse_time / 2)
+            for colour in rainbowColours:
+                self.rgbled.fade_to(colour, self.period)
+                time.sleep(self.period)
+
+
+
 
 
 
@@ -156,4 +186,10 @@ def ledAlert(destColour, rgbLEDy, length):
 
 
 # All modes must be listed here
-modes = {"breathe": mode_breathe, "static": mode_static, "alert": mode_alert, "strobe": mode_strobe}
+modes = {
+    "breathe": mode_breathe,
+    "static": mode_static,
+    "alert": mode_alert,
+    "strobe": mode_strobe,
+    "rainbow": mode_rainbow,
+    "kill": None }

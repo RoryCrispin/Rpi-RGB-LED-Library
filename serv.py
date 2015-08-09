@@ -2,7 +2,7 @@
 from BaseHTTPServer import BaseHTTPRequestHandler
 import urlparse
 import rbgLib
-import time
+# import time
 import led_modes
 
 __author__ = 'Rory'
@@ -19,26 +19,39 @@ def find_mode(mode_string):
     return led_modes.modes[mode_string]
 
 
-def search_q(queries, search_string):
+def search_q(queries, search_string, return_list=False, fallback=None):
     try:
-        return queries[search_string]
+        if return_list:
+            return queries[search_string]
+        else:
+            return queries[search_string][0]
+
     except:
-        print("String Q not found: " + search_string + " Q: " + queries)
-        return None
+        print("String Q not found: " + search_string + " Q: " + str(queries))
+        return fallback
 
 
 def mode_query_interpreter(queries):
     mode = None
-    colour = None
+    colours = None
     try:
-        mode = find_mode(search_q(queries, 'mode')[0])
-        colours = rbgLib.hex_to_colour(search_q(queries, "hexcolour"))
+        mode = find_mode(search_q(queries, 'mode'))
 
+        colours = []
+        colours_q = search_q(queries, "hexcolour", return_list=True)
+        for colour in colours_q:
+            colours.append(rbgLib.hex_to_colour(colour))
+        print colours
     except Exception:
         print Exception
 
     if mode == led_modes.mode_breathe:
-        md = led_modes.mode_breathe(colours[0], 0.01)
+        md = led_modes.mode_breathe(
+            colours[0],
+            search_q(
+                queries,
+                "period",
+                fallback=0.01))
         rgbLEDx.bind_mode(md)
 
     elif mode == led_modes.mode_alert:
@@ -47,19 +60,39 @@ def mode_query_interpreter(queries):
         rgbLEDx.interruptMode(md, pause=True, resume_thread=True)
 
     elif mode == led_modes.mode_strobe:
-        md = led_modes.mode_strobe(colour, 0.1)
+        md = led_modes.mode_strobe(
+            colours[0],
+            search_q(
+                queries,
+                "period",
+                fallback=0.01))
         rgbLEDx.interruptMode(md)
+    #elif mode == led_modes.None:
+        # TODO I'm working on a 'mode' that kills all modes and turns the LEDs
+        # off.
+
+    elif mode == led_modes.mode_rainbow:
+        md =led_modes.mode_rainbow(
+            search_q(
+                queries,
+                "period",
+                fallback=0.01))
+        rgbLEDx.interruptMode(md)
+
+
+
 
     else:
         rgbLEDx.set_colour(rbgLib.orange)
 
 
 class GetHandler(BaseHTTPRequestHandler):
+
     def do_GET(self):
         print("REQUEST YO YO!")
         self.send_response(200)
         self.end_headers()
-        self.wfile.write("Thanks! <A HREF='javascript:history.go(0)'>Click to refresh the page</A>")
+        self.wfile.write("Thanks!")
 
         parsed_path = urlparse.urlparse(self.path)
         qs = urlparse.parse_qs(parsed_path.query)
@@ -73,7 +106,7 @@ class GetHandler(BaseHTTPRequestHandler):
 if __name__ == '__main__':
     from BaseHTTPServer import HTTPServer
 
-    server = HTTPServer(('192.168.1.13', 8001), GetHandler)
+    server = HTTPServer(('192.168.1.141', 8001), GetHandler)
 
     print 'Starting server, use <Ctrl-C> to stop'
     server.serve_forever()
