@@ -1,4 +1,5 @@
 from __future__ import division
+import random
 
 __author__ = 'Rory'
 import time
@@ -17,6 +18,9 @@ class RGBFunctionParent(Thread):
     pause_ready = False
 
     def __init__(self, func_name, run_time=False):
+        self.uuid = random.getrandbits(30)
+        print "INIT MODE -- UUID: "
+        print self.uuid
         Thread.__init__(self)
         if not run_time:
             self.run_infinite = True
@@ -134,7 +138,9 @@ class mode_strobe(RGBFunctionParent):
         self.pause = False
         # off = rbgLib.rgbColour(0,0,0)
         pOn = self.period
-        pOff= self.period*10
+        pOff = self.period * 15
+        print pOn
+        print pOff
         cColour = self.colour
         while True:
             self.check_loop()
@@ -146,6 +152,7 @@ class mode_strobe(RGBFunctionParent):
             self.rgbled.turn_off()
             time.sleep(pOff)
 
+
 class mode_rainbow(RGBFunctionParent):
     period = None
 
@@ -155,7 +162,8 @@ class mode_rainbow(RGBFunctionParent):
 
     def main_func(self):
         self.pause = False
-        rainbowColours = [rbgLib.red, rbgLib.orange, rbgLib.yellow, rbgLib.green, rbgLib.blue, rbgLib.indigo, rbgLib.purple ]
+        rainbowColours = [rbgLib.red, rbgLib.orange, rbgLib.yellow, rbgLib.green, rbgLib.blue, rbgLib.indigo,
+                          rbgLib.purple]
 
         while True:
             self.check_loop()
@@ -166,12 +174,20 @@ class mode_rainbow(RGBFunctionParent):
             for colour in rainbowColours:
                 self.rgbled.fade_to(colour, self.period)
                 time.sleep(self.period)
+                self.check_loop()
 
 
+class mode_fadeto(RGBFunctionParent):
+    colour = None
+    period = None
 
+    def __init__(self, colour, period):
+        super(mode_fadeto, self).__init__("fadeto")
+        self.colour = colour
+        self.period = float(period)
 
-
-
+    def main_func(self):
+        self.rgbled.fade_to(self.colour, self.period)
 
 
 def find_delta(start_val, finish_val, steps):
@@ -192,4 +208,5 @@ modes = {
     "alert": mode_alert,
     "strobe": mode_strobe,
     "rainbow": mode_rainbow,
-    "kill": None }
+    "fadeto": mode_fadeto,
+    "kill": None}

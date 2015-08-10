@@ -66,6 +66,8 @@ def hex_to_colour(v):
 def percentageToHex(percentage):
     return 2.55 * percentage
 
+def hexToPercentage(hex):
+    return hex/255*100
 
 # Preset Colours
 red = rgbColour(100, 0, 0)
@@ -178,9 +180,12 @@ class LED(object):
             # self.pwm = GPIO.PWM(pin, freq)
             # self.pwm.start(self.duty_cycle)
 
-    def set_ds(self, percentage):
-        hex = int(percentageToHex(percentage))
-        self.duty_cycle = percentage
+    def set_ds(self, val, hexInput=False):
+        if not hexInput:
+            hex = int(percentageToHex(val))
+            self.duty_cycle = val
+        else:
+            self.duty_cycle = None
         # print "Change LED: " + str(self.pin) + " to ds: " + str(hex) + " For
         # %: " + str(percentage)
         pi.set_PWM_dutycycle(self.pin, hex)

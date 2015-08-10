@@ -65,8 +65,8 @@ def mode_query_interpreter(queries):
             search_q(
                 queries,
                 "period",
-                fallback=0.01))
-        rgbLEDx.interruptMode(md)
+                fallback=0.02))
+        rgbLEDx.bind_mode(md)
     #elif mode == led_modes.None:
         # TODO I'm working on a 'mode' that kills all modes and turns the LEDs
         # off.
@@ -77,8 +77,16 @@ def mode_query_interpreter(queries):
                 queries,
                 "period",
                 fallback=0.01))
-        rgbLEDx.interruptMode(md)
+        rgbLEDx.bind_mode(md)
 
+    elif mode == led_modes.mode_fadeto:
+         md =led_modes.mode_fadeto(
+             colours[0],
+            search_q(
+                queries,
+                "period",
+                fallback=0.01))
+         rgbLEDx.bind_mode(md)
 
 
 
@@ -108,7 +116,7 @@ if __name__ == '__main__':
 
     server = HTTPServer(('192.168.1.141', 8001), GetHandler)
 
-    print 'Starting server, use <Ctrl-C> to stop'
+    print 'Starting server, use <Ctrl-C> to stop..'
     server.serve_forever()
 
 
