@@ -1,37 +1,6 @@
 import rbgLib
 import led_modes
 
-# class breathe(object):
-#    def __init__(self):
-#     pass
-#
-# modes = {
-#     "breathe": breathe,
-#     "static": None,
-#     "alert": None,
-#     "strobe": None,
-#     "rainbow": None,
-#     "fadeto": None,
-#     "kill": None}
-#
-# namedColours = {
-#     "red": None,
-#     "green": None,
-#     "blue": None,
-#     "orange": None,
-#     "yellow": None,
-#     "indigo": None,
-#     "lime": None,
-#     "ocean": None,
-#     "purple": None,
-#     "violet":None,
-#     "hot pink": None,
-#     "aqua": None,
-#     "turquoise": None
-# }
-
-
-
 def findMode(cmd):
     for mode in led_modes.modes:
 
