@@ -77,28 +77,37 @@ class RGBFunctionParent(Thread):
 
 
 class mode_breathe(RGBFunctionParent):
-    colour = None
+    colours = None
     pulse_time = 0
+    fade_to_black = False
 
-    def __init__(self, colour, pulse_time, run_time=False):
+    def __init__(self, colours, pulse_time, run_time=False, fade_to_black = False):
         super(mode_breathe, self).__init__("breathe", run_time)
-        self.colour = colour
+        self.colours = colours
         self.pulse_time = float(pulse_time)
+        self.fade_to_black = fade_to_black
+        if len(colours) == 1:
+            self.fade_to_black = True
+        print colours
+
 
     def main_func(self):
         self.pause = False
         while True:
-            self.check_loop()
+            for colour in self.colours:
+                self.check_loop()
+                if self.interrupt:
+                    break
+                self.rgbled.fade_to(colour, self.pulse_time)
+                time.sleep(self.pulse_time*10)
+
+                if self.fade_to_black:
+                    self.rgbled.fade_to(
+                        colour.with_brightness(0.05),
+                        self.pulse_time)
+                    time.sleep(self.pulse_time)
             if self.interrupt:
                 break
-            # self.rgbled.fade_to(self.colour, int(self.pulse_time / 2))
-            # self.rgbled.fade_to(self.colour.with_brightness(0.2), int(self.pulse_time / 2))
-            self.rgbled.fade_to(self.colour, self.pulse_time)
-            time.sleep(self.pulse_time)
-            self.rgbled.fade_to(
-                self.colour.with_brightness(0.05),
-                self.pulse_time)
-            time.sleep(self.pulse_time)
 
 
 class mode_static(RGBFunctionParent):
@@ -127,11 +136,15 @@ class mode_alert(RGBFunctionParent):
 class mode_strobe(RGBFunctionParent):
     colour = None
     period = None
+    through_black = False
 
-    def __init__(self, colour, period):
+    def __init__(self, colours, period, through_black=False):
         super(mode_strobe, self).__init__("strobe")
-        self.colour = colour
+        self.colours = colours
         self.period = float(period)
+        self.through_black = through_black
+        if len(colours) == 1:
+            self.through_black = True
 
     def main_func(self):
 
@@ -141,16 +154,20 @@ class mode_strobe(RGBFunctionParent):
         pOff = self.period * 15
         print pOn
         print pOff
-        cColour = self.colour
         while True:
-            self.check_loop()
+            for colour in self.colours:
+                self.check_loop()
+                if self.interrupt:
+                    break
+                self.check_loop()
+                self.rgbled.set_colour(colour)
+                time.sleep(pOn)
+                if self.through_black:
+                    self.rgbled.turn_off()
+                    time.sleep(pOff)
             if self.interrupt:
                 break
-            self.check_loop()
-            self.rgbled.set_colour(cColour)
-            time.sleep(pOn)
-            self.rgbled.turn_off()
-            time.sleep(pOff)
+
 
 
 class mode_rainbow(RGBFunctionParent):
@@ -204,9 +221,15 @@ def ledAlert(destColour, rgbLEDy, length):
 # All modes must be listed here
 modes = {
     "breathe": mode_breathe,
+    "fade": mode_breathe,
+
     "static": mode_static,
     "alert": mode_alert,
+
     "strobe": mode_strobe,
+    "flash": mode_strobe,
+
     "rainbow": mode_rainbow,
     "fadeto": mode_fadeto,
+
     "kill": None}

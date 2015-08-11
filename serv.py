@@ -4,6 +4,7 @@ import urlparse
 import rbgLib
 # import time
 import led_modes
+import voice_command_interpreter
 
 __author__ = 'Rory'
 rbgLib.init()
@@ -30,6 +31,18 @@ def search_q(queries, search_string, return_list=False, fallback=None):
         print("String Q not found: " + search_string + " Q: " + str(queries))
         return fallback
 
+def rootQHandler(qs):
+    try:
+        print qs
+        if qs['voicecommand'] != None:
+            md = voice_command_interpreter.takeCommand(qs['avcommand'][0])
+            rgbLEDx.bind_mode(md)
+    except:
+        mode_query_interpreter(qs)
+
+
+
+
 
 def mode_query_interpreter(queries):
     mode = None
@@ -47,7 +60,7 @@ def mode_query_interpreter(queries):
 
     if mode == led_modes.mode_breathe:
         md = led_modes.mode_breathe(
-            colours[0],
+            colours,
             search_q(
                 queries,
                 "period",
@@ -61,7 +74,7 @@ def mode_query_interpreter(queries):
 
     elif mode == led_modes.mode_strobe:
         md = led_modes.mode_strobe(
-            colours[0],
+            colours,
             search_q(
                 queries,
                 "period",
@@ -104,10 +117,7 @@ class GetHandler(BaseHTTPRequestHandler):
 
         parsed_path = urlparse.urlparse(self.path)
         qs = urlparse.parse_qs(parsed_path.query)
-        print(qs)
-        print qs['mode'][0]
-        mode_query_interpreter(qs)
-
+        rootQHandler(qs)
         return
 
 

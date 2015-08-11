@@ -76,9 +76,29 @@ blue = rgbColour(0, 0, 100)
 orange = hex_rgb_to_colour(255, 127, 0)
 yellow = hex_rgb_to_colour(255, 255, 0)
 indigo = hex_rgb_to_colour(75, 0, 130)
+lime = hex_rgb_to_colour(125,255,0)
+ocean = rgbColour(0,54,100)
 purple = rgbColour(100, 0, 100)
+violet = purple
+hot_pink = hex_rgb_to_colour(255,0,125)
 aqua = rgbColour(0, 100, 100)
 turquoise = rgbColour(0, 100, 30)
+
+namedColours = {
+    "red": red,
+    "green": green,
+    "blue": blue,
+    "orange": orange,
+    "yellow": yellow,
+    "indigo": indigo,
+    "lime": lime,
+    "ocean": ocean,
+    "purple": purple,
+    "violet":purple,
+    "hot pink": hot_pink,
+    "aqua": aqua,
+    "turquoise": turquoise
+}
 
 
 # noinspection PyPep8Naming
