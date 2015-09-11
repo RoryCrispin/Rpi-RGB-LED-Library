@@ -113,12 +113,12 @@ class mode_breathe(RGBFunctionParent):
 class mode_static(RGBFunctionParent):
     colour = None
 
-    def __init__(self, rgbLed, colour, func_name):
-        super(mode_static, self).__init__("static", rgbLed)
+    def __init__(self, colour):
+        super(mode_static, self).__init__("static")
         self.colour = colour
 
     def main_func(self):
-        self.rgbled.setcolour(self.colour)
+        self.rgbled.set_colour(self.colour)
 
 
 class mode_alert(RGBFunctionParent):

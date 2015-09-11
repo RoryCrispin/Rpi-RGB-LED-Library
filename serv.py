@@ -13,7 +13,9 @@ redLED = rbgLib.LED(18, True, frequency)
 greenLED = rbgLib.LED(24, True, frequency)
 blueLED = rbgLib.LED(23, True, frequency)
 rgbLEDx = rbgLib.rbgLed(redLED, greenLED, blueLED)
-rgbLEDx.set_colour(rbgLib.blue)
+
+md = led_modes.mode_alert(rbgLib.aqua)
+rgbLEDx.bind_mode(md)
 
 
 def find_mode(mode_string):
@@ -82,7 +84,15 @@ def mode_query_interpreter(queries):
         rgbLEDx.bind_mode(md)
     #elif mode == led_modes.None:
         # TODO I'm working on a 'mode' that kills all modes and turns the LEDs
-        # off.
+
+    elif mode == led_modes.mode_static:
+            md = led_modes.mode_static(
+                colours[0])
+            rgbLEDx.bind_mode(md)
+        #elif mode == led_modes.None:
+            # TODO I'm working on a 'mode' that kills all modes and turns the LEDs
+
+
 
     elif mode == led_modes.mode_rainbow:
         md =led_modes.mode_rainbow(
